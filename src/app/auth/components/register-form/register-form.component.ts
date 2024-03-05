@@ -14,8 +14,19 @@ export class RegisterFormComponent implements OnInit {
   form = this.fb.group(
     {
       name: ['', [Validators.required]],
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6), MyValidators.validPassword]],
+      email: [
+        '',
+        [Validators.required, Validators.email],
+        [MyValidators.validateEmailAsync(this.usersService)],
+      ],
+      password: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(6),
+          MyValidators.validPassword,
+        ],
+      ],
       confirmPassword: ['', [Validators.required]],
       checkTerms: [false, [Validators.requiredTrue]],
     },
@@ -23,21 +34,27 @@ export class RegisterFormComponent implements OnInit {
       validators: MyValidators.matchPasswords,
     }
   );
+  status: 'loading' | 'success' | 'error' | 'init' = 'init';
 
-  constructor(
-    private fb: FormBuilder,
-    private usersService: UsersService
-  ) {}
+  constructor(private fb: FormBuilder, private usersService: UsersService) {}
 
   ngOnInit(): void {}
 
   register(event: Event) {
     event.preventDefault();
     if (this.form.valid) {
+      this.status = 'loading';
       const value = this.form.value;
-      this.usersService.create(value)
-      .subscribe((rta) => {
-        console.log(rta);
+      this.usersService.create(value).subscribe({
+        next: (rta) => {
+          // redirect
+          // alert
+          this.status = 'success';
+        },
+        error: (error) => {
+          // redict
+          this.status = 'error';
+        },
       });
     } else {
       this.form.markAllAsTouched();
